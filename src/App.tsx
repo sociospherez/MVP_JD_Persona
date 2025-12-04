@@ -190,6 +190,7 @@ export default function App() {
 
     const el = document.getElementById("theme-css") as HTMLLinkElement;
     if (el) el.href = `/themes/${next}.css`;
+    console.log("Switched to theme:", next);
   };
 
   /* FORM STATE */

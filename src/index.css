@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url(themes/light.css);
+@import url(themes/dark.css);
 
 /* Theme variable application */
 body {
