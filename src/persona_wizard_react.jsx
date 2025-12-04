@@ -62,6 +62,7 @@ const Stepper = ({ current }) => (
 function Slider({ label, min = 1, max = 5, step = 1, value, onChange, help }) {
   return (
     <div className="mb-5">
+      
       <div className="flex items-center justify-between mb-1">
         <label className="font-medium text-gray-800">{label}</label>
         <span className="text-sm text-gray-600">{value}</span>

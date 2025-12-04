@@ -1,0 +1,15 @@
+:root {
+  --bg-body: #f7f9fc;
+  --bg-card: #ffffff;
+  --bg-accent: #f2f4f7;
+
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --text-inverse: #ffffff;
+
+  --border-soft: #e5e7eb;
+  --shadow-card: rgba(0, 0, 0, 0.05);
+
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+}

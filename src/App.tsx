@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Radar,
   RadarChart,
@@ -9,11 +10,21 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Handshake, Database, BarChart3, ScrollText, Scale } from "lucide-react";
 
-/** =========================
- *  Constants / Types
- *  ========================= */
+import {
+  Handshake,
+  Database,
+  BarChart3,
+  ScrollText,
+  Scale,
+  Sun,
+  Moon,
+} from "lucide-react";
+
+/* ----------------------------------------------------------
+   CONSTANTS
+---------------------------------------------------------- */
+
 type AxisLabel =
   | "Vision→Execution Balance"
   | "Systems Depth"
@@ -35,17 +46,16 @@ const AXES: AxisLabel[] = [
   "Communication Clarity",
 ];
 
-const DEFAULT_WEIGHTS: number[] = [0.12, 0.1, 0.14, 0.12, 0.12, 0.14, 0.13, 0.13];
-const DEFAULT_SCORES: number[] = [4, 3, 5, 4, 4, 5, 4, 4];
+const DEFAULT_WEIGHTS = [0.12, 0.1, 0.14, 0.12, 0.12, 0.14, 0.13, 0.13];
+const DEFAULT_SCORES = [4, 3, 5, 4, 4, 5, 4, 4];
 
-type StrengthIconKey = "Handshake" | "Database" | "BarChart3" | "ScrollText" | "Scale";
-const STRENGTH_OPTIONS: { id: string; label: string; icon: StrengthIconKey }[] = [
-  { id: "strategic_partnerships", label: "Strategic Partnerships", icon: "Handshake" },
-  { id: "information_centralization", label: "Information Centralization", icon: "Database" },
-  { id: "dashboards_reporting", label: "Dashboards & Reporting", icon: "BarChart3" },
-  { id: "legislative_compliance", label: "Legislative Compliance", icon: "ScrollText" },
-  { id: "process_automation", label: "Process Automation", icon: "BarChart3" },
-  { id: "governance_risk", label: "Governance & Risk", icon: "Scale" },
+const STRENGTH_OPTIONS = [
+  { id: "strategic_partnerships", label: "Strategic Partnerships", emoji: "🤝" },
+  { id: "information_centralization", label: "Information Centralization", emoji: "🗄️" },
+  { id: "dashboards_reporting", label: "Dashboards & Reporting", emoji: "📊" },
+  { id: "legislative_compliance", label: "Legislative Compliance", emoji: "📜" },
+  { id: "process_automation", label: "Process Automation", emoji: "⚙️" },
+  { id: "governance_risk", label: "Governance & Risk", emoji: "⚖️" },
 ];
 
 const STEPS = [
@@ -54,125 +64,189 @@ const STEPS = [
   { key: "persona", label: "Persona Attributes" },
   { key: "success", label: "Success Metrics" },
   { key: "summary", label: "Persona Card" },
-] as const;
+];
 
-type RadarDatum = { axis: AxisLabel; Persona: number };
+/* ----------------------------------------------------------
+   WALKTHROUGH OVERLAY
+---------------------------------------------------------- */
 
-/** =========================
- *  UI Components
- *  ========================= */
-const Stepper: React.FC<{ current: number }> = ({ current }) => (
-  <div className="flex items-center flex-wrap gap-3 mb-6">
-    {STEPS.map((s, idx) => {
-      const active = idx === current;
-      const done = idx < current;
-      return (
-        <div key={s.key} className="flex items-center">
-          <div
-            className={[
-              "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
-              done ? "bg-black text-white" : active ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-700",
-              "shadow-sm",
-            ].join(" ")}
-            aria-current={active ? "step" : undefined}
-          >
-            {idx + 1}
-          </div>
-          <div className="ml-2 mr-4 text-sm sm:text-base font-medium text-gray-800">{s.label}</div>
-          {idx !== STEPS.length - 1 && <div className="w-8 h-[2px] bg-gray-200 mr-4" />}
+const WalkthroughOverlay = ({
+  onStart,
+  onSkip,
+}: {
+  onStart: () => void;
+  onSkip: () => void;
+}) => {
+  const [tourStep, setTourStep] = useState(0);
+
+  const slides = [
+    {
+      title: "How this demo works",
+      icon: "🧭",
+      body: [
+        "Pretend you’re the hiring manager describing the person you need.",
+        "The wizard turns that into: a persona radar, a candidate profile, and a JD draft.",
+        "Fields are pre-filled for demo purposes.",
+      ],
+    },
+    {
+      title: "What you will fill in",
+      icon: "✍️",
+      body: [
+        "Org context, challenges, priorities, role purpose.",
+        "Sliders define the behavioural 'shape' of the persona.",
+        "Strength tiles highlight unique differentiators.",
+      ],
+    },
+    {
+      title: "What you get",
+      icon: "📊",
+      body: [
+        "A visual persona card with radar.",
+        "An ideal candidate bullet set.",
+        "A generated JD you can copy & refine.",
+      ],
+    },
+  ];
+
+  const current = slides[tourStep];
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -24 }}
+        className="bg-white rounded-2xl p-6 max-w-xl w-full mx-4 shadow-2xl"
+      >
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <span className="text-2xl">{current.icon}</span>
+            {current.title}
+          </h2>
+          <button onClick={onSkip} className="text-xs text-gray-500">
+            Skip
+          </button>
         </div>
-      );
-    })}
-  </div>
-);
 
-const Slider: React.FC<{
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  help?: string;
-}> = ({ label, value, onChange, min = 1, max = 5, step = 1, help }) => (
-  <div className="mb-5">
-    <div className="flex items-center justify-between mb-1">
-      <label className="font-medium text-gray-800">{label}</label>
-      <span className="text-sm text-gray-600">{value}</span>
+        <ul className="text-sm text-gray-700 space-y-1 mb-5">
+          {current.body.map((b, i) => (
+            <li key={i}>• {b}</li>
+          ))}
+        </ul>
+
+        <div className="flex justify-between">
+          <button
+            className="px-3 py-1.5 rounded-lg border text-xs"
+            disabled={tourStep === 0}
+            onClick={() => setTourStep((t) => Math.max(0, t - 1))}
+          >
+            Back
+          </button>
+
+          <button
+            className="px-3 py-1.5 rounded-lg bg-black text-white text-xs"
+            onClick={() => {
+              if (tourStep < slides.length - 1) {
+                setTourStep((t) => t + 1);
+              } else {
+                onStart();
+              }
+            }}
+          >
+            {tourStep === slides.length - 1 ? "Start demo" : "Next"}
+          </button>
+        </div>
+      </motion.div>
     </div>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full accent-black"
-      aria-label={label}
-    />
-    {help && <p className="text-xs text-gray-500 mt-1">{help}</p>}
-  </div>
-);
-
-/** =========================
- *  Main App
- *  ========================= */
-export default function App(): JSX.Element {
-  const [step, setStep] = useState<number>(0);
-
-  // Step 1 — Context
-  const [orgName, setOrgName] = useState<string>("Sand Tech Holdings Ltd");
-  const [stage, setStage] = useState<string>("Transformation");
-  const [challenges, setChallenges] = useState<string>(
-    "ERP stabilisation, integration gaps, governance vs delivery balance",
   );
-  const [team, setTeam] = useState<string>(
-    "PMO of 5; reports to Head of Technology; close with Finance/Operations/Vendors",
+};
+
+/* ----------------------------------------------------------
+   MAIN APP
+---------------------------------------------------------- */
+
+export default function App() {
+  /* Wizard State */
+  const [step, setStep] = useState(0);
+  const [maxReached, setMaxReached] = useState(0);
+
+  /* Walkthrough State */
+  const [showWalkthrough, setShowWalkthrough] = useState(() => {
+    return !localStorage.getItem("personaWizardSeen");
+  });
+
+  const finishWalkthrough = () => {
+    localStorage.setItem("personaWizardSeen", "1");
+    setShowWalkthrough(false);
+  };
+
+  /* THEME TOGGLE */
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+
+    const el = document.getElementById("theme-css") as HTMLLinkElement;
+    if (el) el.href = `/themes/${next}.css`;
+  };
+
+  /* FORM STATE */
+  const [orgName, setOrgName] = useState("Sand Tech Holdings Ltd");
+  const [stage, setStage] = useState("Transformation");
+  const [challenges, setChallenges] = useState(
+    "ERP stabilisation, integration gaps, governance vs delivery balance"
   );
-  const [culture, setCulture] = useState<string>("Collaborative, fast-paced, pragmatic");
-  const [priorities, setPriorities] = useState<string>(
-    "Stabilise ERP, close integration gaps, restore reporting standards",
+  const [team, setTeam] = useState(
+    "PMO of 5; reports to Head of Technology; close with Finance/Operations/Vendors"
+  );
+  const [culture, setCulture] = useState("Collaborative, fast-paced, pragmatic");
+  const [priorities, setPriorities] = useState(
+    "Stabilise ERP, close integration gaps, restore reporting standards"
   );
 
-  // Step 2 — Purpose
-  const [title, setTitle] = useState<string>("ERP Transformation Manager");
-  const [purpose, setPurpose] = useState<string>(
-    "Align technology delivery with business outcomes and make ERP a single source of truth.",
+  const [title, setTitle] = useState("ERP Transformation Manager");
+  const [purpose, setPurpose] = useState(
+    "Align technology delivery with business outcomes."
   );
-  const [scope, setScope] = useState<string>("Manager");
-  const [decisionLevel, setDecisionLevel] = useState<string>("Hybrid");
-  const [influence, setInfluence] = useState<string>("3–5 direct reports; multi-region influence with vendors");
+  const [scope, setScope] = useState("Manager");
+  const [decisionLevel, setDecisionLevel] = useState("Hybrid");
 
-  // Step 3 — Persona attributes
-  const [scores, setScores] = useState<number[]>([...DEFAULT_SCORES]);
-  const [weights, setWeights] = useState<number[]>([...DEFAULT_WEIGHTS]);
+  const [scores, setScores] = useState([...DEFAULT_SCORES]);
+  const [weights, setWeights] = useState([...DEFAULT_WEIGHTS]);
   const [selectedStrengths, setSelectedStrengths] = useState<string[]>([]);
 
-  // Step 4 — Success metrics
-  const [shortTerm, setShortTerm] = useState<string>(
-    "ERP data stabilised; ownership model agreed; integration map documented with initial fixes.",
+  const [shortTerm, setShortTerm] = useState(
+    "ERP data stabilised; ownership model agreed."
   );
-  const [longTerm, setLongTerm] = useState<string>(
-    "Cross-functional reporting live; improved adoption; reduced downtime and duplication.",
+  const [longTerm, setLongTerm] = useState(
+    "Cross-functional reporting live; reduced downtime."
   );
-  const [culturalImpact, setCulturalImpact] = useState<string>(
-    "Establish calm, structured delivery rhythm; build trust via transparency.",
-  );
-
-  /** Derived data */
-  const data: RadarDatum[] = useMemo(
-    () => AXES.map((axis, i) => ({ axis, Persona: scores[i] })),
-    [scores],
+  const [culturalImpact, setCulturalImpact] = useState(
+    "Build trust through transparent delivery rhythms."
   );
 
-  const fitScore: number = useMemo(() => {
+  /* Radar Data */
+  const data = useMemo(
+    () =>
+      AXES.map((axis, i) => ({
+        axis,
+        Persona: scores[i],
+      })),
+    [scores]
+  );
+
+  const fitScore = useMemo(() => {
     const norm = scores.map((s) => s / 5);
-    const value = norm.reduce((acc, s, i) => acc + s * (weights[i] ?? 0), 0);
-    return Math.round(value * 100);
+    return Math.round(
+      norm.reduce((acc, s, i) => acc + s * (weights[i] ?? 0), 0) * 100
+    );
   }, [scores, weights]);
 
-  const idealBullets: string[] = useMemo(() => {
-    const topAxes = [...scores]
+  /* IDEAL CANDIDATE */
+  const idealBullets = useMemo(() => {
+    const top = [...scores]
       .map((s, i) => ({ axis: AXES[i], score: s }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
@@ -182,569 +256,459 @@ export default function App(): JSX.Element {
       .map((id) => STRENGTH_OPTIONS.find((o) => o.id === id)?.label)
       .filter(Boolean);
 
-    const bullets = [
-      topAxes.length ? `Proven strength across ${topAxes.join(", ")}.` : null,
-      `Operates at ${decisionLevel} level with ${scope} scope; translates strategy into execution.`,
-      team ? `Collaborates effectively across ${team}.` : null,
+    return [
+      top.length ? `Strength in ${top.join(", ")}.` : null,
+      `Operates at ${decisionLevel} level with ${scope} scope.`,
       culture ? `Thrives in a ${culture.toLowerCase()} environment.` : null,
-      priorities ? `Motivated by priorities such as: ${priorities}.` : null,
-      strengths.length ? `Brings additional strengths in ${strengths.join(", ")}.` : null,
-      shortTerm ? `90-day focus: ${shortTerm}` : null,
+      priorities ? `Motivated by: ${priorities}.` : null,
+      strengths.length ? `Additional strengths: ${strengths.join(", ")}.` : null,
     ].filter(Boolean) as string[];
+  }, [
+    scores,
+    selectedStrengths,
+    decisionLevel,
+    scope,
+    culture,
+    priorities,
+  ]);
 
-    return bullets;
-  }, [scores, selectedStrengths, decisionLevel, scope, team, culture, priorities, shortTerm]);
-
-  const jsonPayload = useMemo(
-    () => ({
-      role_title: title,
-      organisation: orgName,
-      context: {
-        stage,
-        challenges: challenges.split(",").map((s) => s.trim()).filter(Boolean),
-        team_structure: team,
-        culture,
-        priorities,
-      },
-      persona: {
-        axes: AXES,
-        weights,
-        persona_scores: scores,
-        scale: { min: 1, max: 5 },
-        additional_strengths: selectedStrengths,
-      },
-      success: {
-        short_term: shortTerm,
-        long_term: longTerm,
-        cultural_impact: culturalImpact,
-      },
-      scoring: {
-        method: "weighted_normalized_sum",
-        fit: fitScore,
-      },
-      derived: {
-        ideal_candidate: idealBullets,
-      },
-    }),
-    [
-      title,
-      orgName,
-      stage,
-      challenges,
-      team,
-      culture,
-      priorities,
-      scores,
-      weights,
-      shortTerm,
-      longTerm,
-      culturalImpact,
-      fitScore,
-      selectedStrengths,
-      idealBullets,
-    ],
-  );
-
-  /** Nav */
-  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const back = () => setStep((s) => Math.max(s - 1, 0));
-
-  /** Download persona JSON */
-  const downloadJSON = () => {
-    const blob = new Blob([JSON.stringify(jsonPayload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title.replace(/\s+/g, "_").toLowerCase()}_persona.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  /* Step Navigation */
+  const next = () => {
+    setStep((s) => {
+      const next = Math.min(s + 1, STEPS.length - 1);
+      setMaxReached((m) => Math.max(m, next));
+      return next;
+    });
   };
 
-  /** Icon mapper */
-  const IconMap: Record<StrengthIconKey, React.ComponentType<{ className?: string }>> = {
-    Handshake,
-    Database,
-    BarChart3,
-    ScrollText,
-    Scale,
-  };
+  const back = () => setStep((s) => Math.max(0, s - 1));
+
+  /* ----------------------------------------------------------
+     RENDER
+  ---------------------------------------------------------- */
 
   return (
-    <div className="min-h-screen w-full bg-white">
-      <div className="max-w-5xl mx-auto p-6">
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl sm:text-3xl font-bold tracking-tight mb-2"
-        >
+    <div
+      className="min-h-screen px-6 py-10"
+      style={{ background: "var(--bg-body)", color: "var(--text-main)" }}
+    >
+      {showWalkthrough && (
+        <AnimatePresence>
+          <WalkthroughOverlay
+            onStart={finishWalkthrough}
+            onSkip={finishWalkthrough}
+          />
+        </AnimatePresence>
+      )}
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">
           Persona Builder — {title}
-        </motion.h1>
-        <p className="text-gray-600 mb-6">
-          Persona-first → JD-second. Capture context, shape the persona, and generate an Ideal Candidate profile & JD.
-        </p>
+        </h1>
 
-        <Stepper current={step} />
+        {/* THEME TOGGLE — stays where it was */}
+        <button
+          onClick={toggleTheme}
+          className="px-3 py-1.5 rounded-full border flex items-center gap-2"
+          style={{
+            background: "var(--bg-card)",
+            color: "var(--text-main)",
+            borderColor: "var(--border-soft)",
+          }}
+        >
+          {theme === "light" ? (
+            <>
+              <Moon size={14} />
+              Dark
+            </>
+          ) : (
+            <>
+              <Sun size={14} />
+              Light
+            </>
+          )}
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="bg-gray-50 rounded-2xl p-5 shadow-sm">
-              {/* Step 0 — Context */}
-              {step === 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Setting the Scene</h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Organisation / Department</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={orgName}
-                        onChange={(e) => setOrgName(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Stage</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={stage}
-                        onChange={(e) => setStage(e.target.value)}
-                      >
-                        {["Start-up", "Growth", "Transformation", "Stabilisation", "Mature"].map((opt) => (
-                          <option key={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-sm font-medium">Key Challenges</label>
-                      <textarea
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        rows={2}
-                        value={challenges}
-                        onChange={(e) => setChallenges(e.target.value)}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-sm font-medium">Team Structure</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={team}
-                        onChange={(e) => setTeam(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Culture</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={culture}
-                        onChange={(e) => setCulture(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Priorities (3–6 months)</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={priorities}
-                        onChange={(e) => setPriorities(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+      {/* STEP-BY-STEP HEADER */}
+      <div className="flex gap-4 mb-8">
+        {STEPS.map((s, i) => {
+          const active = i === step;
+          const done = i < step;
+          const enabled = i <= maxReached;
 
-              {/* Step 1 — Purpose */}
-              {step === 1 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Role Purpose & Scope</h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Role Title</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Scope Level</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={scope}
-                        onChange={(e) => setScope(e.target.value)}
-                      >
-                        {["Individual Contributor", "Manager", "Head", "Director"].map((opt) => (
-                          <option key={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-sm font-medium">Primary Purpose (1 sentence)</label>
-                      <textarea
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        rows={2}
-                        value={purpose}
-                        onChange={(e) => setPurpose(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Decision Level</label>
-                      <select
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={decisionLevel}
-                        onChange={(e) => setDecisionLevel(e.target.value)}
-                      >
-                        {["Strategic", "Tactical", "Operational", "Hybrid"].map((opt) => (
-                          <option key={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Influence / Span</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={influence}
-                        onChange={(e) => setInfluence(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+          return (
+            <button
+              key={s.key}
+              disabled={!enabled}
+              onClick={() => enabled && setStep(i)}
+              className={`px-3 py-1 rounded-full text-sm transition ${
+                active
+                  ? "bg-black text-white"
+                  : done
+                  ? "bg-gray-800 text-white"
+                  : "bg-gray-300 text-gray-800"
+              }`}
+            >
+              {i + 1}. {s.label}
+            </button>
+          );
+        })}
+      </div>
 
-              {/* Step 2 — Persona Attributes */}
-              {step === 2 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">Persona Attributes</h2>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Rate the expected level for the <em>ideal persona</em> (1 = basic, 5 = expert). Adjust weights if
-                    certain axes matter more.
-                  </p>
+      {/* MAIN CONTENT AREA */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT PANEL */}
+        <div className="lg:col-span-2">
+          <div className="card p-6">
+            {step === 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Setting the Scene</h2>
 
-                  {AXES.map((axis, i) => (
-                    <Slider
-                      key={axis}
-                      label={axis}
-                      value={scores[i]}
-                      onChange={(v) => setScores((prev) => prev.map((p, idx) => (idx === i ? v : p)))}
-                      help="Set the target strength for this attribute"
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label>Organisation / Department</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
                     />
-                  ))}
+                  </div>
 
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-gray-800">Weights (advanced)</summary>
-                    <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                      {AXES.map((axis, i) => (
-                        <div key={axis} className="flex items-center gap-2">
-                          <label className="text-sm text-gray-700 w-48">{axis}</label>
-                          <input
-                            type="number"
-                            step={0.01}
-                            min={0}
-                            max={1}
-                            value={weights[i]}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              setWeights((prev) => prev.map((w, idx) => (idx === i ? val : w)));
-                            }}
-                            className="w-24 rounded-lg border border-gray-300 p-1"
-                          />
-                        </div>
+                  <div>
+                    <label>Stage</label>
+                    <select
+                      className="input w-full p-2 rounded-xl"
+                      value={stage}
+                      onChange={(e) => setStage(e.target.value)}
+                    >
+                      {[
+                        "Start-up",
+                        "Growth",
+                        "Transformation",
+                        "Stabilisation",
+                        "Mature",
+                      ].map((opt) => (
+                        <option key={opt}>{opt}</option>
                       ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Tip: weights should sum to ~1.00. Current total:{" "}
-                      <strong>{weights.reduce((a, b) => a + b, 0).toFixed(2)}</strong>
-                    </p>
-                  </details>
+                    </select>
+                  </div>
 
-                  <div className="mt-6">
-                    <h3 className="text-base font-semibold mb-2">Select Additional Strengths (max 4)</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {STRENGTH_OPTIONS.map((opt) => {
-                        const selected = selectedStrengths.includes(opt.id);
-                        const Icon = IconMap[opt.icon] ?? BarChart3;
-                        return (
-                          <button
-                            key={opt.id}
-                            type="button"
-                            onClick={() =>
-                              setSelectedStrengths((prev) => {
-                                if (prev.includes(opt.id)) return prev.filter((id) => id !== opt.id);
-                                if (prev.length >= 4) return prev; // enforce limit
-                                return [...prev, opt.id];
-                              })
-                            }
-                            className={`flex items-center gap-2 p-3 rounded-xl border ${
-                              selected ? "border-black bg-gray-100" : "border-gray-300"
-                            } text-left`}
-                            aria-pressed={selected}
-                          >
-                            <Icon className="w-5 h-5" />
-                            <span className="text-sm">{opt.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Tip: choose differentiators that complement the core competencies above.
-                    </p>
+                  <div className="sm:col-span-2">
+                    <label>Key Challenges</label>
+                    <textarea
+                      className="input w-full p-2 rounded-xl"
+                      rows={2}
+                      value={challenges}
+                      onChange={(e) => setChallenges(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label>Team Structure</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={team}
+                      onChange={(e) => setTeam(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Culture</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={culture}
+                      onChange={(e) => setCulture(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Priorities (3–6 months)</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={priorities}
+                      onChange={(e) => setPriorities(e.target.value)}
+                    />
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Step 3 — Success Metrics */}
-              {step === 3 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Success Metrics</h2>
-                  <div className="grid gap-4">
-                    <div>
-                      <label className="text-sm font-medium">90-Day Success</label>
-                      <textarea
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        rows={2}
-                        value={shortTerm}
-                        onChange={(e) => setShortTerm(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">12–18 Month Outcomes</label>
-                      <textarea
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        rows={2}
-                        value={longTerm}
-                        onChange={(e) => setLongTerm(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Cultural Impact</label>
-                      <input
-                        className="mt-1 w-full rounded-xl border border-gray-300 p-2"
-                        value={culturalImpact}
-                        onChange={(e) => setCulturalImpact(e.target.value)}
-                      />
-                    </div>
+            {/* Step 1 */}
+            {step === 1 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">
+                  Role Purpose & Scope
+                </h2>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label>Role Title</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Scope</label>
+                    <select
+                      className="input w-full p-2 rounded-xl"
+                      value={scope}
+                      onChange={(e) => setScope(e.target.value)}
+                    >
+                      {[
+                        "Individual Contributor",
+                        "Manager",
+                        "Head",
+                        "Director",
+                      ].map((opt) => (
+                        <option key={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label>Purpose</label>
+                    <textarea
+                      rows={2}
+                      className="input w-full p-2 rounded-xl"
+                      value={purpose}
+                      onChange={(e) => setPurpose(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Decision Level</label>
+                    <select
+                      className="input w-full p-2 rounded-xl"
+                      value={decisionLevel}
+                      onChange={(e) => setDecisionLevel(e.target.value)}
+                    >
+                      {["Strategic", "Tactical", "Operational", "Hybrid"].map(
+                        (opt) => (
+                          <option key={opt}>{opt}</option>
+                        )
+                      )}
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Step 4 — Persona Card (Radar, Ideal Candidate, JD) */}
-              {step === 4 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">Persona Card</h2>
-                  <p className="text-sm text-gray-600 mb-4">
-                    This radar represents the <strong>ideal persona</strong> targets you set. Use it to inform JD and
-                    shortlisting.
-                  </p>
-                  <div className="text-center mb-2">
-                    <div className="text-sm tracking-wider font-bold text-gray-800">CORE COMPETENCIES</div>
+            {/* Step 2 */}
+            {step === 2 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">
+                  Persona Attributes
+                </h2>
+
+                {AXES.map((axis, i) => (
+                  <div key={axis} className="mb-4">
+                    <label className="text-sm font-medium">{axis}</label>
+
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={scores[i]}
+                      onChange={(e) =>
+                        setScores((prev) =>
+                          prev.map((p, idx) =>
+                            idx === i ? Number(e.target.value) : p
+                          )
+                        )
+                      }
+                      className="w-full"
+                    />
                   </div>
-                  <div className="w-full h-80 bg-white rounded-xl shadow-inner p-3 border border-gray-200">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-                        <PolarGrid stroke="#d6d3d1" />
-                        <PolarAngleAxis dataKey="axis" tick={{ fontSize: 12 }} />
-                        <PolarRadiusAxis angle={45} domain={[0, 5]} tick={{ fontSize: 10 }} stroke="#e7e5e4" />
-                        <Radar name="Persona" dataKey="Persona" stroke="#1f2937" fill="#111827" fillOpacity={0.18} dot />
+                ))}
+
+                <h3 className="font-semibold mt-6 mb-2">
+                  Additional Strengths (max 4)
+                </h3>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {STRENGTH_OPTIONS.map((opt) => {
+                    const selected = selectedStrengths.includes(opt.id);
+
+                    return (
+                      <motion.button
+                        key={opt.id}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() =>
+                          setSelectedStrengths((prev) => {
+                            if (prev.includes(opt.id))
+                              return prev.filter((id) => id !== opt.id);
+                            if (prev.length >= 4) return prev;
+                            return [...prev, opt.id];
+                          })
+                        }
+                        className={`p-3 rounded-xl border text-left ${
+                          selected
+                            ? "bg-blue-100 border-blue-400"
+                            : "bg-white border-gray-200"
+                        }`}
+                      >
+                        <div className="text-xl mb-1">{opt.emoji}</div>
+                        <div className="text-sm">{opt.label}</div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 */}
+            {step === 3 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Success Metrics</h2>
+
+                <div className="grid gap-4">
+                  <div>
+                    <label>90-Day Success</label>
+                    <textarea
+                      className="input w-full p-2 rounded-xl"
+                      value={shortTerm}
+                      onChange={(e) => setShortTerm(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>12–18 Month Outcomes</label>
+                    <textarea
+                      className="input w-full p-2 rounded-xl"
+                      value={longTerm}
+                      onChange={(e) => setLongTerm(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Cultural Impact</label>
+                    <input
+                      className="input w-full p-2 rounded-xl"
+                      value={culturalImpact}
+                      onChange={(e) => setCulturalImpact(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Persona Card */}
+            {step === 4 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3">Persona Card</h2>
+
+                <div className="card p-4 mb-5">
+                  <div className="w-full h-64">
+                    <ResponsiveContainer>
+                      <RadarChart data={data}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="axis" />
+                        <PolarRadiusAxis angle={45} domain={[0, 5]} />
+                        <Radar
+                          name="Persona"
+                          dataKey="Persona"
+                          fill="#0f172a"
+                          fillOpacity={0.3}
+                          stroke="#0f172a"
+                        />
                         <Legend />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
-
-                  {/* Additional Strengths */}
-                  <div className="mt-5">
-                    <div className="text-center mb-2">
-                      <div className="text-sm tracking-wider font-bold text-gray-800">ADDITIONAL STRENGTHS</div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {selectedStrengths.length === 0 && (
-                        <div className="col-span-2 sm:col-span-4 text-center text-sm text-gray-500">
-                          No strengths selected yet.
-                        </div>
-                      )}
-                      {selectedStrengths.map((id) => {
-                        const opt = STRENGTH_OPTIONS.find((o) => o.id === id);
-                        if (!opt) return null;
-                        const Icon = IconMap[opt.icon] ?? BarChart3;
-                        return (
-                          <div key={id} className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 bg-white">
-                            <Icon className="w-6 h-6 mb-2" />
-                            <div className="text-xs text-center font-medium">{opt.label}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Fit + Meta */}
-                  <div className="mt-4 grid sm:grid-cols-3 gap-3">
-                    <div className="p-4 rounded-xl bg-white border border-gray-200">
-                      <div className="text-xs text-gray-500">Persona Fit</div>
-                      <div className="text-2xl font-bold">{fitScore}</div>
-                      <div className="text-xs text-gray-500">Weighted persona strength (0–100)</div>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white border border-gray-200">
-                      <div className="text-xs text-gray-500">Role</div>
-                      <div className="font-semibold">{title}</div>
-                      <div className="text-xs text-gray-500">{orgName}</div>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white border border-gray-200">
-                      <div className="text-xs text-gray-500">Stage</div>
-                      <div className="font-semibold">{stage}</div>
-                      <div className="text-xs text-gray-500">Decision: {decisionLevel} • Scope: {scope}</div>
-                    </div>
-                  </div>
-
-                  {/* Ideal Candidate Profile */}
-                  <div className="mt-4 p-4 rounded-xl bg-white border border-gray-200 text-sm">
-                    <div className="font-semibold mb-2">Ideal Candidate Profile</div>
-                    {idealBullets.length === 0 ? (
-                      <div className="text-gray-500">Adjust the persona sliders and context to generate a profile.</div>
-                    ) : (
-                      <ul className="list-disc pl-5 space-y-1">
-                        {idealBullets.map((b, i) => (
-                          <li key={i}>{b}</li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="flex items-center justify-end mt-3">
-                      <button
-                        onClick={async () => {
-                          const text = `Ideal Candidate for ${title} (at ${orgName})\n\n- ${idealBullets.join(
-                            "\n- ",
-                          )}`;
-                          try {
-                            await navigator.clipboard.writeText(text);
-                          } catch (err) {
-                            console.error("Copy failed", err);
-                          }
-                        }}
-                        className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs"
-                      >
-                        Copy Profile
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* JD Draft Generator */}
-                  <div className="mt-5 p-4 rounded-xl bg-white border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm tracking-wider font-bold text-gray-800">JD DRAFT</div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            const topAxes = [...scores]
-                              .map((s, i) => ({ axis: AXES[i], score: s }))
-                              .sort((a, b) => b.score - a.score)
-                              .slice(0, 3)
-                              .map((x) => x.axis);
-                            const strengths = selectedStrengths
-                              .map((id) => STRENGTH_OPTIONS.find((o) => o.id === id)?.label)
-                              .filter(Boolean)
-                              .join(", ");
-                            const jd = `Role: ${title}
-Organisation: ${orgName}
-Stage: ${stage}
-
-Purpose:
-${purpose}
-
-Top Competencies:
-- ${topAxes.join("\n- ")}
-
-Ideal Candidate:
-- ${idealBullets.join("\n- ")}
-
-Key Outcomes (90 days):
-- ${shortTerm}
-
-12–18 Month Outcomes:
-- ${longTerm}
-
-Culture & Ways of Working:
-- ${culturalImpact}
-
-Additional Strengths:
-- ${strengths || "As relevant"}
-
-Requirements:
-- Demonstrable track record across the core competencies above.
-- Ability to operate at ${decisionLevel} level with ${scope} scope.
-
-Keywords:
-${AXES.join(", ")}`;
-                            const el = document.getElementById("jd-draft") as HTMLTextAreaElement | null;
-                            if (el) el.value = jd;
-                          }}
-                          className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs"
-                        >
-                          Generate JD Draft
-                        </button>
-                        <button
-                          onClick={async () => {
-                            const el = document.getElementById("jd-draft") as HTMLTextAreaElement | null;
-                            if (el && el.value) {
-                              try {
-                                await navigator.clipboard.writeText(el.value);
-                              } catch (err) {
-                                console.error("Copy failed", err);
-                              }
-                            }
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                    </div>
-                    <textarea
-                      id="jd-draft"
-                      rows={8}
-                      className="w-full rounded-xl border border-gray-300 p-2 text-sm"
-                      placeholder="Click 'Generate JD Draft' to populate..."
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end mt-4">
-                    <button onClick={downloadJSON} className="px-4 py-2 rounded-xl bg-black text-white shadow">
-                      Download Persona JSON
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Nav */}
-            <div className="flex items-center justify-between mt-4">
-              <button onClick={back} disabled={step === 0} className="px-4 py-2 rounded-xl border border-gray-300 disabled:opacity-40">
-                Back
-              </button>
-              <button
-                onClick={next}
-                disabled={step === STEPS.length - 1}
-                className="px-4 py-2 rounded-xl bg-gray-900 text-white disabled:opacity-40"
-              >
-                {step === STEPS.length - 1 ? "Done" : "Next"}
-              </button>
-            </div>
+                <div className="card p-4 mb-4">
+                  <h3 className="font-semibold mb-2">Ideal Candidate</h3>
+
+                  <ul className="text-sm space-y-1">
+                    {idealBullets.map((b, i) => (
+                      <li key={i}>• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="card p-4">
+                  <h3 className="font-semibold mb-2">JD Draft</h3>
+                  <textarea
+                    className="input w-full p-2 rounded-xl text-sm"
+                    rows={8}
+                    defaultValue=""
+                    id="jd-draft"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right rail — live preview / checklist */}
-          <aside className="bg-white border border-gray-200 rounded-2xl p-5 h-max sticky top-4">
-            <h3 className="font-semibold mb-3">Live Checklist</h3>
-            <ul className="text-sm space-y-2">
-              <li>• Context set: <strong>{orgName && stage ? "✓" : ""}</strong></li>
-              <li>• Role purpose: <strong>{title && purpose ? "✓" : ""}</strong></li>
-              <li>• Persona sliders: <strong>{scores.every((s) => s >= 1) ? "✓" : ""}</strong></li>
-              <li>• Success metrics: <strong>{shortTerm && longTerm ? "✓" : ""}</strong></li>
-            </ul>
-            <div className="mt-4 p-3 rounded-xl bg-gray-50 text-xs text-gray-600">
-              Fit score responds live to persona sliders and weights.
-            </div>
-            <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-semibold">Raw JSON</summary>
-              <pre className="mt-2 text-xs bg-gray-100 p-2 rounded-xl overflow-auto max-h-64">
-                {JSON.stringify(jsonPayload, null, 2)}
-              </pre>
-            </details>
-          </aside>
+          {/* Nav */}
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={back}
+              disabled={step === 0}
+              className="px-4 py-2 rounded-xl border"
+            >
+              Back
+            </button>
+
+            <button
+              onClick={next}
+              disabled={step === STEPS.length - 1}
+              className="px-4 py-2 rounded-xl bg-black text-white"
+            >
+              {step === STEPS.length - 1 ? "Done" : "Next"}
+            </button>
+          </div>
         </div>
+
+        {/* RIGHT PANEL */}
+        <aside className="card p-4 h-max sticky top-4">
+          <h3 className="font-semibold mb-3">Checklist</h3>
+          <ul className="text-sm space-y-2">
+            <li>• Context ✓</li>
+            <li>• Role purpose ✓</li>
+            <li>• Persona sliders ✓</li>
+            <li>• Success metrics ✓</li>
+          </ul>
+
+          <details className="mt-4">
+            <summary className="cursor-pointer">Raw JSON</summary>
+            <pre className="text-[11px] bg-gray-100 p-2 rounded-xl max-h-64 overflow-auto">
+              {JSON.stringify(
+                {
+                  role_title: title,
+                  organisation: orgName,
+                  context: {
+                    challenges,
+                    team,
+                    culture,
+                    priorities,
+                  },
+                  persona: {
+                    scores,
+                    weights,
+                    selectedStrengths,
+                  },
+                  success: {
+                    shortTerm,
+                    longTerm,
+                    culturalImpact,
+                  },
+                  derived: {
+                    idealBullets,
+                    fitScore,
+                  },
+                },
+                null,
+                2
+              )}
+            </pre>
+          </details>
+        </aside>
       </div>
     </div>
   );

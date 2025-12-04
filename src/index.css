@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme variable application */
+body {
+  background: var(--bg-body);
+  color: var(--text-main);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 1px 4px var(--shadow-card);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-main);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
