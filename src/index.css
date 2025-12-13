@@ -2,131 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===========================
-   Brand colour tokens
-   =========================== */
-:root {
-  --c-deep: #0c0032;
-  --c-indigo: #190061;
-  --c-purple: #3500d3;
-  --c-violet: #9089fc;
-  --c-pink: #ff80b5;
+/* Minimal global polish (NO @apply of Tailwind utilities) */
+html,
+body {
+  height: 100%;
 }
-
-/* Base body styles – theme gets added as a class from React */
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    sans-serif;
-  min-height: 100vh;
-  background-attachment: fixed;
-}
-
-/* ------- Dark (semi-night) mode ------- */
-body.theme-dark {
-  color: #f9fafb;
-  background: radial-gradient(circle at top left, #3500d3 0, transparent 45%),
-    radial-gradient(circle at bottom right, #9089fc 0, transparent 55%),
-    linear-gradient(
-      to bottom right,
-      var(--c-deep) 0%,
-      var(--c-indigo) 25%,
-      var(--c-purple) 60%,
-      #12001f 100%
-    );
-}
-
-/* ------- Light (soft halo) mode ------- */
-body.theme-light {
-  color: #111827;
-  background: radial-gradient(circle at top left, #ffebfb 0, transparent 45%),
-    radial-gradient(circle at bottom right, #e0e7ff 0, transparent 55%),
-    linear-gradient(to bottom right, #ffffff 0%, #f4ecff 40%, #ffe8f5 100%);
-}
-
-/* ===========================
-   Ambient gradient blobs
-   =========================== */
-.ambient-blob {
-  position: absolute;
-  width: 26rem;
-  height: 26rem;
-  filter: blur(90px);
-  opacity: 0.35;
-  z-index: -1;
-}
-
-.blob-top {
-  top: -10rem;
-  left: calc(50% - 12rem);
-  transform: rotate(28deg);
-  background: linear-gradient(to top right, var(--c-pink), var(--c-violet));
-  clip-path: polygon(
-    74.1% 44.1%,
-    100% 61.6%,
-    97.5% 26.9%,
-    85.5% 0.1%,
-    80.7% 2%,
-    72.5% 32.5%,
-    60.2% 62.4%,
-    52.4% 68.1%,
-    47.5% 58.3%,
-    45.2% 34.5%,
-    27.5% 76.7%,
-    0.1% 64.9%,
-    17.9% 100%,
-    27.6% 76.8%,
-    76.1% 97.7%
-  );
-}
-
-.blob-bottom {
-  bottom: -9rem;
-  left: calc(50% + 6rem);
-  transform: rotate(12deg);
-  background: linear-gradient(to top right, var(--c-pink), var(--c-violet));
-  clip-path: polygon(
-    74.1% 44.1%,
-    100% 61.6%,
-    97.5% 26.9%,
-    85.5% 0.1%,
-    80.7% 2%,
-    72.5% 32.5%,
-    60.2% 62.4%,
-    52.4% 68.1%,
-    47.5% 58.3%,
-    45.2% 34.5%,
-    27.5% 76.7%,
-    0.1% 64.9%,
-    17.9% 100%,
-    27.6% 76.8%,
-    76.1% 97.7%
-  );
-}
-
-/* ===========================
-   Glass surfaces
-   =========================== */
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-}
-
-.glass-panel-soft {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-}
-
-/* Light mode tweak so panels don’t look muddy */
-body.theme-light .glass-panel,
-body.theme-light .glass-panel-soft {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.15);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
