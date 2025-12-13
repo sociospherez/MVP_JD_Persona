@@ -1,0 +1,205 @@
+/* ==========================================================
+   DARK THEME — Glass Indigo (S3) + Medium Blur (B2) + Glow G2
+   ========================================================== */
+
+html.dark {
+  --bg-main: radial-gradient(circle at 20% 20%, #0c0032, #190061, #240090, #282828 88%);
+  --surface-1: rgba(20, 20, 40, 0.55);
+  --surface-2: rgba(35, 35, 65, 0.65);
+  --surface-3: rgba(255, 255, 255, 0.05);
+
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  --text-strong: #f8fafc;
+  --text-soft: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --glow-indigo: 0 0 18px rgba(53, 0, 211, 0.45);
+  --backdrop: blur(12px);
+
+  background: var(--bg-main);
+  color: var(--text-strong);
+}
+
+/* ==========================================================
+   GLOBAL SURFACES
+   ========================================================== */
+
+body.dark {
+  background: var(--bg-main);
+  color: var(--text-soft);
+}
+
+.dark .glass-panel {
+  background: var(--surface-1);
+  backdrop-filter: var(--backdrop);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--glow-indigo);
+}
+
+.dark .glass-card {
+  background: var(--surface-2);
+  backdrop-filter: var(--backdrop);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--glow-indigo);
+}
+
+/* Wizard main container */
+.dark .wizard-container {
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: var(--backdrop);
+}
+
+/* Right rail */
+.dark .sidebar-panel {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: var(--backdrop);
+}
+
+/* Step panels */
+.dark .step-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: var(--backdrop);
+}
+
+/* Inputs */
+.dark input,
+.dark textarea,
+.dark select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-soft);
+  color: var(--text-strong);
+  backdrop-filter: blur(6px);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Text styles */
+.dark .text-strong {
+  color: var(--text-strong);
+}
+
+.dark .text-soft {
+  color: var(--text-soft);
+}
+
+/* Buttons */
+.dark button {
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.dark .btn-primary {
+  background: #240090;
+  color: #fff;
+  border: 1px solid #3500d3;
+  box-shadow: var(--glow-indigo);
+}
+
+.dark .btn-primary:hover {
+  background: #3500d3;
+}
+
+.dark .btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-soft);
+  color: var(--text-soft);
+}
+
+.dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Walkthrough modal */
+.dark .walkthrough-modal {
+  background: rgba(20, 20, 40, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--glow-indigo);
+}
+
+/* Stepper */
+.dark .stepper-circle {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-strong);
+  border: 1px solid var(--border-soft);
+}
+
+.dark .stepper-circle-active {
+  background: #3500d3;
+  box-shadow: var(--glow-indigo);
+}
+
+.dark .stepper-circle-done {
+  background: #240090;
+  box-shadow: var(--glow-indigo);
+}
+
+/* RADAR CHART ------------------------------------------------------ */
+
+.dark .recharts-legend-item-text {
+  fill: var(--text-soft) !important;
+}
+
+.dark .recharts-polar-grid {
+  stroke: rgba(255, 255, 255, 0.25) !important;
+}
+
+.dark text {
+  fill: var(--text-soft) !important;
+}
+
+.dark .recharts-radar {
+  stroke: #3500d3 !important;
+  fill: rgba(36, 0, 144, 0.45) !important;
+}
+
+/* Additional Strength icons */
+.dark .strength-tile {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--glow-indigo);
+}
+
+/* JD Draft textarea */
+.dark #jd-draft {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-soft);
+  color: var(--text-strong);
+}
+
+/* Scrollbar (dark override) */
+.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Hover glow */
+.dark .hover-glow:hover {
+  box-shadow: var(--glow-indigo);
+}
+
+/* Animation helpers */
+.dark .fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

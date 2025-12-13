@@ -1,23 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persona Wizard — Glass Indigo</title>
 
-  <!-- THEME LOADER -->
+  <!-- Prevent theme flash -->
+  <script>
+    try {
+      const saved = localStorage.getItem("personaTheme");
+      if (!saved) {
+        document.documentElement.classList.add("dark"); // default dark
+      } else {
+        if (saved === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+    } catch { }
+  </script>
 
-  <link id="theme-css" rel="stylesheet" href="src/themes/light.css" />
+  <!-- Base stylesheet (tailwind + transitions) -->
+  <link rel="stylesheet" href="/src/index.css" />
 
-
-  <title>Persona Wizard</title>
+  <!-- Dynamic theme stylesheets -->
+  <link id="light-theme" rel="stylesheet" href="/src/themes/light.css" disabled />
+  <link id="dark-theme" rel="stylesheet" href="/src/themes/dark.css" />
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
-
 </body>
 
 </html>

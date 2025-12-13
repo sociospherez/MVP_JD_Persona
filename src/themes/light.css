@@ -1,0 +1,210 @@
+/* ==========================================================
+   LIGHT THEME — Soft Neutral + Indigo Accents
+   Balanced specifically for your semi-dark pairing
+   ========================================================== */
+
+html.light {
+  --bg-main: linear-gradient(
+      to bottom right,
+      #fafafa,
+      #f3f4f6 30%,
+      #e5e7eb 70%
+  );
+
+  --surface-1: rgba(255, 255, 255, 0.82);     /* glass but bright */
+  --surface-2: rgba(255, 255, 255, 0.95);
+  --surface-3: #ffffff;
+
+  --border-soft: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+
+  --text-strong: #111827;
+  --text-soft: #374151;
+  --text-muted: #6b7280;
+
+  --indigo: #3500d3;
+  --indigo-soft: #240090;
+  --shadow-soft: 0 3px 12px rgba(0, 0, 0, 0.06);
+
+  background: var(--bg-main);
+  color: var(--text-strong);
+}
+
+/* ==========================================================
+   GLOBAL SURFACES
+   ========================================================== */
+
+body.light {
+  background: var(--bg-main);
+  color: var(--text-soft);
+}
+
+.light .glass-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-soft);
+}
+
+.light .glass-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-soft);
+}
+
+.light .wizard-container {
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+}
+
+.light .sidebar-panel {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+/* Step cards */
+.light .step-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+/* ==========================================================
+   INPUTS
+   ========================================================== */
+
+.light input,
+.light textarea,
+.light select {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  color: var(--text-strong);
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+
+.light .btn-primary {
+  background: var(--indigo);
+  color: #fff;
+  border: 1px solid var(--indigo-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.light .btn-primary:hover {
+  background: var(--indigo-soft);
+}
+
+.light .btn-secondary {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  color: var(--text-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.light .btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* ==========================================================
+   WALKTHROUGH MODAL
+   ========================================================== */
+
+.light .walkthrough-modal {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ==========================================================
+   STEPPER
+   ========================================================== */
+
+.light .stepper-circle {
+  background: #e5e7eb;
+  color: var(--text-strong);
+  border: 1px solid var(--border-soft);
+}
+
+.light .stepper-circle-active {
+  background: var(--indigo);
+  color: #fff;
+}
+
+.light .stepper-circle-done {
+  background: var(--indigo-soft);
+  color: #fff;
+}
+
+/* ==========================================================
+   RADAR CHART
+   ========================================================== */
+
+.light .recharts-legend-item-text {
+  fill: var(--text-soft) !important;
+}
+
+.light .recharts-polar-grid {
+  stroke: rgba(0, 0, 0, 0.15) !important;
+}
+
+.light text {
+  fill: var(--text-muted) !important;
+}
+
+.light .recharts-radar {
+  stroke: var(--indigo-soft) !important;
+  fill: rgba(36, 0, 144, 0.28) !important;
+}
+
+/* ==========================================================
+   ADDITIONAL STRENGTHS
+   ========================================================== */
+
+.light .strength-tile {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ==========================================================
+   JD DRAFT TEXTAREA
+   ========================================================== */
+
+.light #jd-draft {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  color: var(--text-strong);
+}
+
+/* ==========================================================
+   SCROLLBAR
+   ========================================================== */
+
+.light ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+/* ==========================================================
+   HOVER GLOW (LIGHT MODE = SOFT SHADOW)
+   ========================================================== */
+
+.light .hover-glow:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+/* Fade animation */
+.light .fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
