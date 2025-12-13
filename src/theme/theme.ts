@@ -4,8 +4,8 @@ const THEME_LINK_ID = "persona-theme-css";
 
 export function applyTheme(theme: ThemeName) {
   const href = theme === "dark"
-    ? "/src/themes/dark.css"
-    : "/src/themes/light.css";
+    ? "src/themes/dark.css"
+    : "src/themes/light.css";
 
   let link = document.getElementById(THEME_LINK_ID) as HTMLLinkElement | null;
 

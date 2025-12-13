@@ -15,6 +15,92 @@
   --shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
 }
 
+/*
+
+
+
+Cool Greys:
+
+#535662	(83,86,98)
+#6d727d	(109,114,125)
+#7e8390	(126,131,144)
+#969ca8	(150,156,168)
+#aeb1bc	(174,177,188)
+
+cool Greys light:
+
+	#ececec	(236,236,236)
+#cbcfd2	(203,207,210)
+#a7adb2	(167,173,178)
+#8b929a	(139,146,154)
+#767b8d	(118,123,141)
+
+Whites:
+
+	#ffffff	(255,255,255)
+#fbfbfb	(251,251,251)
+#f7f7f7	(247,247,247)
+#f1f1f1	(241,241,241)
+#efefef	(239,239,239)
+
+wolfmoon colors:
+
+Color	Hex	RGB
+#ddebef	(221,235,239)
+#e6f0f3	(230,240,243)
+#eef5f7	(238,245,247)
+#f7fafb	(247,250,251)
+#ffffff	(255,255,255)
+
+Light Kingdom colors:
+
+
+Color	Hex	RGB
+#ffffff	(255,255,255)
+#f2fbfd	(242,251,253)
+#e2eef1	(226,238,241)
+#d4e2e6	(212,226,230)
+#c9d7da	(201,215,218)
+
+Facebook blues:
+
+
+Color	Hex	RGB
+#0472b3	(4,114,179)
+#0f6a9d	(15,106,157)
+#fbffff	(251,255,255)
+#0472b3	(4,114,179)
+#fff4ff	(255,244,255)
+
+tyeps of whites:
+
+
+Color	Hex	RGB
+#0472b3	(4,114,179)
+#0f6a9d	(15,106,157)
+#fbffff	(251,255,255)
+#0472b3	(4,114,179)
+#fff4ff	(255,244,255)
+
+ColourBlanch Whites:
+
+
+Hex	RGB
+#f2f5fa	(242,245,250)
+#ffffff	(255,255,255)
+#d0d7e1	(208,215,225)
+#f1f4f9	(241,244,249)
+#ecedf5	(236,237,245)
+
+Te4dious Whites:
+
+	#e1e1e1	(225,225,225)
+#d4d4d4	(212,212,212)
+#bfbdbd	(191,189,189)
+#abaaaa	(171,170,170)
+#989898	(152,152,152)
+*/
+
 body {
   background: radial-gradient(
       900px 600px at 15% 10%,

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, JSX } from "react";
 import { motion } from "framer-motion";
 import {
   Radar,
