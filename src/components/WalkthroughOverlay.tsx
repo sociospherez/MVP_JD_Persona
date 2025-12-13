@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Slide = {
   title: string;
+  kicker: string;
   icon: string;
-  body: string[];
-  layout?: React.ReactNode;
+  cards: { icon: string; title: string; text: string }[];
+  footerHint?: string;
 };
 
 export default function WalkthroughOverlay({
@@ -17,65 +18,51 @@ export default function WalkthroughOverlay({
   onClose: () => void;
   onStart: () => void;
 }) {
-  const [tourStep, setTourStep] = useState(0);
+  const slides: Slide[] = useMemo(
+    () => [
+      {
+        title: "Quick Tour",
+        kicker: "You’ll finish this demo in ~60 seconds.",
+        icon: "🧭",
+        cards: [
+          { icon: "🧩", title: "Pick a role preset", text: "Start from a realistic baseline (Admin Officer / Sales Assistant)." },
+          { icon: "🎛️", title: "Adjust the persona", text: "Sliders + strengths shape the role’s behavior profile." },
+          { icon: "📤", title: "Get outputs", text: "Persona radar, Ideal Candidate bullets, JD draft, JSON." },
+        ],
+        footerHint: "Tip: This isn’t a form — it’s a structured conversation.",
+      },
+      {
+        title: "Inputs",
+        kicker: "Make it structured and reusable (less free text).",
+        icon: "🧱",
+        cards: [
+          { icon: "🏷️", title: "Dropdowns & tags", text: "Keep scope/decision/influence consistent across roles." },
+          { icon: "🧠", title: "Sliders mean behavior", text: "Not buzzwords — this sets how the role operates day-to-day." },
+          { icon: "✨", title: "Strength tiles", text: "Differentiators. Max 4. Keep it crisp." },
+        ],
+        footerHint: "We’ll expand the structured inputs next (Influence tags, Scope templates, etc.).",
+      },
+      {
+        title: "Outputs & Next",
+        kicker: "Turn this into a repeatable Persona Bank.",
+        icon: "📦",
+        cards: [
+          { icon: "🪪", title: "Persona Card", text: "A stable snapshot you can reuse and compare." },
+          { icon: "🧾", title: "JD draft", text: "Start fast, refine tone and compliance." },
+          { icon: "🏦", title: "Save persona", text: "Store versions per role and load later in 1 click." },
+        ],
+        footerHint: "Next: Persona Bank tab (save/load/delete/compare).",
+      },
+    ],
+    [],
+  );
 
-  const slides: Slide[] = [
-    {
-      title: "Welcome to the Persona Wizard (Demo)",
-      icon: "🧭",
-      body: [
-        "You’re role-playing the hiring manager describing the person you need.",
-        "The wizard turns that into: a persona radar, an ideal candidate profile, and a draft JD.",
-        "This demo is pre-filled so you can see a complete outcome fast.",
-      ],
-      layout: (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
-          <div className="pw-card rounded-xl p-3">
-            <div className="font-semibold mb-1">1 — Context</div>
-            <p className="pw-muted">Org, stage, challenges, team, culture, priorities.</p>
-          </div>
-          <div className="pw-card rounded-xl p-3">
-            <div className="font-semibold mb-1">2 — Persona</div>
-            <p className="pw-muted">Sliders + strengths shape the “ideal candidate”.</p>
-          </div>
-          <div className="pw-card rounded-xl p-3">
-            <div className="font-semibold mb-1">3 — Output</div>
-            <p className="pw-muted">Persona card, bullets, JD draft, JSON export.</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Make it interactive (not a wall of text)",
-      icon: "✨",
-      body: [
-        "Use dropdowns/tags where possible to keep inputs structured.",
-        "Sliders update the radar live — that’s your ‘feel’ check.",
-        "Strength tiles are differentiators, not noise. Pick max 4.",
-      ],
-    },
-    {
-      title: "Outputs you can reuse",
-      icon: "📦",
-      body: [
-        "Copy the Ideal Candidate bullets into a brief or recruiter pack.",
-        "Generate a JD draft, then refine language for your org.",
-        "Export JSON so we can store personas + compare across roles later.",
-      ],
-    },
-  ];
+  const [idx, setIdx] = useState(0);
+  const slide = slides[idx];
+  const last = idx === slides.length - 1;
 
-  const last = tourStep === slides.length - 1;
-
-  const goNext = () => {
-    if (!last) setTourStep((p) => p + 1);
-    else {
-      onStart();
-      onClose();
-    }
-  };
-
-  const goPrev = () => setTourStep((p) => Math.max(0, p - 1));
+  const next = () => (last ? (onStart(), onClose()) : setIdx((p) => p + 1));
+  const prev = () => setIdx((p) => Math.max(0, p - 1));
 
   return (
     <AnimatePresence>
@@ -90,47 +77,65 @@ export default function WalkthroughOverlay({
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -18 }}
-            className="max-w-xl w-full mx-4 rounded-2xl pw-card p-6"
+            className="max-w-3xl w-full mx-4 rounded-2xl pw-card p-6"
           >
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="text-2xl">{slides[tourStep].icon}</div>
-                <h2 className="text-lg sm:text-xl font-semibold">
-                  {slides[tourStep].title}
-                </h2>
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{slide.icon}</div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-semibold">{slide.title}</h2>
+                  <div className="text-sm pw-muted">{slide.kicker}</div>
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="pw-btn px-2.5 py-1 rounded-lg text-xs"
+                className="pw-btn px-2.5 py-1.5 rounded-lg text-xs"
               >
                 Close
               </button>
             </div>
 
-            <ul className="text-sm space-y-1 mb-2">
-              {slides[tourStep].body.map((line, idx) => (
-                <li key={idx} className="flex gap-2">
-                  <span className="mt-[3px] text-[10px]">•</span>
-                  <span className="pw-muted">{line}</span>
-                </li>
+            {/* Visual cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {slide.cards.map((c, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="pw-card rounded-xl p-4"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-2xl">{c.icon}</div>
+                    <div className="font-semibold">{c.title}</div>
+                  </div>
+                  <div className="text-sm pw-muted">{c.text}</div>
+                </motion.div>
               ))}
-            </ul>
+            </div>
 
-            {slides[tourStep].layout}
+            {/* Footer hint */}
+            {slide.footerHint && (
+              <div className="mt-4 pw-card rounded-xl p-3 text-xs pw-muted">
+                {slide.footerHint}
+              </div>
+            )}
 
+            {/* Nav */}
             <div className="flex items-center justify-between mt-5">
               <div className="flex items-center gap-2">
-                {slides.map((_, idx) => (
+                {slides.map((_, i) => (
                   <button
-                    key={idx}
+                    key={i}
                     type="button"
-                    onClick={() => setTourStep(idx)}
+                    onClick={() => setIdx(i)}
                     className={`w-2.5 h-2.5 rounded-full transition-all ${
-                      idx === tourStep ? "bg-white" : "bg-white/40"
+                      i === idx ? "bg-white" : "bg-white/40"
                     }`}
-                    aria-label={`Go to slide ${idx + 1}`}
+                    aria-label={`Go to slide ${i + 1}`}
                   />
                 ))}
               </div>
@@ -138,15 +143,15 @@ export default function WalkthroughOverlay({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={goPrev}
-                  disabled={tourStep === 0}
+                  onClick={prev}
+                  disabled={idx === 0}
                   className="pw-btn px-3 py-1.5 rounded-lg text-xs disabled:opacity-40"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  onClick={goNext}
+                  onClick={next}
                   className="pw-btn-primary px-3 py-1.5 rounded-lg text-xs"
                 >
                   {last ? "Start the demo" : "Next"}
